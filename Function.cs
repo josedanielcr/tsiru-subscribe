@@ -33,14 +33,10 @@ public class Function
             return badResponse;
         }
         
-        // Conectar a Azure Table Storage
         string connectionString = Environment.GetEnvironmentVariable("AzureTableAccountStorageName")!;
         TableClient tableClient = new TableClient(connectionString, "SubscriptionList");
-        
-        // Asegurarse de que la tabla exista
         await tableClient.CreateIfNotExistsAsync();
         
-        // Verificar si el correo ya está suscrito
         var query = tableClient.Query<TableEntity>(filter: $"PartitionKey eq 'subscription' and Email eq '{email}'");
         if (query.Any())
         {
@@ -52,14 +48,12 @@ public class Function
             return conflictResponse;
         }
         
-        // Crear una nueva entidad
         var emailEntity = new TableEntity("subscription", Guid.NewGuid().ToString())
         {
             { "Email", email },
             { "Timestamp", DateTime.UtcNow }
         };
         
-        // Insertar la entidad en la tabla
         await tableClient.AddEntityAsync(emailEntity);
 
         var response = req.CreateResponse(System.Net.HttpStatusCode.OK);
